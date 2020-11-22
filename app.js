@@ -62,12 +62,11 @@ namespaces.on('connect', function(socket) {
 
   // Handle signaling events and their destructured object data
   // TODO: This logic should send signaling meesage to a specific peer
-  socket.on('signal', function({ description, candidate}) {
+  socket.on('signal', function({ to, from, description, candidate}) {
     console.log(`Received a signal from ${socket.id}`);
-    console.log({description, candidate});
-    // We want to broadcast the received signal so that the sending
-    // side does not receive its own description or candidate
-    socket.broadcast.emit('signal', { description, candidate });
+    console.log({to, from, description, candidate});
+    // Use the .to method to only send the signal to the correct peer
+    socket.to(to).emit('signal', { to, from, description, candidate });
   });
 });
 
