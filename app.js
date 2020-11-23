@@ -34,6 +34,7 @@ namespaces.on('connect', function(socket) {
   // `namespace` is purely for diagnostic purposes;
   // listen and emit ONLY on the `socket` object
   const namespace = socket.nsp;
+
   // TODO: Inform the connecting client of its ID
   socket.emit('message', `${socket.id} successfully connected on namespace ${namespace.name}`);
   console.log(`Client ${socket.id} connected`);
@@ -41,6 +42,7 @@ namespaces.on('connect', function(socket) {
   namespace.clients(function(error,clients) {
     socket.emit('connected peers', clients);
   });
+
   socket.on('new connected peer', function(data) {
     // Broadcast the newly connected peer's ID to previously connected clients
     socket.broadcast.emit('new connected peer', data);
@@ -50,15 +52,6 @@ namespaces.on('connect', function(socket) {
     console.log(`${socket.id} disconnected`);
     namespace.emit('new disconnected peer', socket.id);
   });
-
-
-  // Listen for a call and broadcast to the receiving client
-  // TODO: Improve this logic for multipeer connections; right now, this just triggers the
-  // "answer" button and negotiation logic
-  socket.on('calling', function() {
-    socket.broadcast.emit('calling');
-  });
-
 
   // Handle signaling events and their destructured object data
   // TODO: This logic should send signaling meesage to a specific peer
