@@ -26,6 +26,9 @@ var peers;
 // Object to hold each per-ID RTCPeerConnection
 var pcs = {};
 
+// Object to hold peer video streams
+var peer_streams = {};
+
 // Let's handle video streams...
 // Set up simple media_constraints
 // (disable audio for classroom demo purposes)
@@ -227,6 +230,8 @@ function removePeer(peers,id) {
   peers.splice(index,1);
   // Remove from pcs connection object
   delete pcs[id];
+  // Remove from peer_streams object
+  delete peer_streams[id];
   return peers;
 }
 
@@ -241,26 +246,32 @@ function establishPeer(peer,isPolite) {
   };
   pcs[peer].conn = new RTCPeerConnection(rtc_config);
   // Respond to peer track events
-  pcs[peer].conn.ontrack = function({track, streams}) {
-    console.log('Heard an ontrack event:\n', track, '\n', streams);
-    appendVideo(track,streams,peer);
-  }
+  pcs[peer].conn.ontrack = function({track}) {
+    console.log('Heard an ontrack event:\n', track);
+    // Append track to the correct peer stream object
+    track.onunmute = function() {
+      console.log('Heard an unmute event');
+      peer_streams[peer].addTrack(track);
+    };
+  };
+  appendVideo(peer);
 }
 
 // Utility funciton to add videos to the DOM
 // This should fire from within the ontrack event,
 // which itself should be registered in the negotiateConnection()
 // function
-function appendVideo(track,streams,id) {
+function appendVideo(id) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
-  var peer_stream = new MediaStream();
+  // Create an empty stream on the peer_streams object;
+  // Remote track will be added later
+  peer_streams[id] = new MediaStream();
   video.autoplay = true;
   video.id = "video-" + id.split('#')[1];
-  video.srcObject = peer_stream;
+  // Set the video source to the empty peer stream
+  video.srcObject = peer_streams[id];
   videos.appendChild(video);
-  peer_stream.addTrack(track);
-  console.log('Attempting to add track', track);
 }
 
 // Utlity function to remove videos from the DOM
