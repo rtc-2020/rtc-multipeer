@@ -278,20 +278,6 @@ function removeVideo(peer) {
   }
 }
 
-function updateVideoSources(ps) {
-  for (var p in ps) {
-    // console.log('Peer stream:', p);
-    // var video_id = p.split('#')[1];
-    // var video_el = document.querySelector('#video-' + video_id);
-    // console.log(video_id);
-    // video_el.srcObject = ps[p];
-    // video_el.autoplay = true;
-    // video_el.play();
-    peer_streams[p] = null;
-    // console.log(video_id,video_el,video_el.srcObject);
-  }
-}
-
 // Join button
 var joinButton = document.querySelector('#join-call');
 joinButton.addEventListener('click', function() {
