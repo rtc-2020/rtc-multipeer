@@ -213,18 +213,6 @@ async function negotiateConnection(pc, clientIs, id) {
     sc.emit('signal', { to: id, from: self_id, candidate: candidate });
   };
 
-  // Respond to peer track events
-  pc.ontrack = function(track) {
-    console.log('Heard an ontrack event:\n', track);
-    appendVideo(track,id);
-  }
-
-  // Load up our media stream tracks, too
-  for (var track of stream.getTracks()) {
-    pc.addTrack(track);
-  }
-
-
 // End negotiateConnection() function
 }
 
@@ -252,21 +240,27 @@ function establishPeer(peer,isPolite) {
     settingRemoteAnswerPending: false
   };
   pcs[peer].conn = new RTCPeerConnection(rtc_config);
+  // Respond to peer track events
+  pcs[peer].conn.ontrack = function({track, streams}) {
+    console.log('Heard an ontrack event:\n', track, '\n', streams);
+    appendVideo(track,streams,peer);
+  }
 }
 
 // Utility funciton to add videos to the DOM
 // This should fire from within the ontrack event,
 // which itself should be registered in the negotiateConnection()
 // function
-function appendVideo(track,id) {
+function appendVideo(track,streams,id) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
-  console.log('Attempting to add track', track.track);
-  var peer_stream = new MediaStream([track.track]);
+  var peer_stream = new MediaStream();
   video.autoplay = true;
   video.id = "video-" + id.split('#')[1];
   video.srcObject = peer_stream;
   videos.appendChild(video);
+  peer_stream.addTrack(track);
+  console.log('Attempting to add track', track);
 }
 
 // Utlity function to remove videos from the DOM
@@ -286,6 +280,10 @@ joinButton.addEventListener('click', function() {
     // Existing peers will themselves be polite (true)
     // establishPeer(peer,false);
     console.log('Negotiating connection with', pc);
+    // Load up our media stream tracks, too
+    for (var track of stream.getTracks()) {
+      pcs[pc].conn.addTrack(track, stream);
+    }
     negotiateConnection(pcs[pc].conn, pcs[pc].clientIs, pc);
   }
   joinButton.remove();
