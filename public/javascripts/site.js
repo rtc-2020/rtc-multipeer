@@ -1,16 +1,6 @@
 // Use `sc` for the signaling channel...
 var sc = io.connect('/' + NAMESPACE);
 
-// Track client states, although these will need to be on a per-peer basis
-/*
-var clientIs = {
-  makingOffer: false,
-  ignoringOffer: false,
-  polite: false,
-  settingRemoteAnswerPending: false
-}
-*/
-
 // Using Google's STUN servers
 var rtc_config = {
   iceServers: [
@@ -20,10 +10,13 @@ var rtc_config = {
   ]
 };
 
+// Track self id from socket.io
 var self_id;
+// Array for tracking IDs of connected peers
+// TODO: Refactor this so only the `pcs` object is needed?
 var peers;
 
-// Object to hold each per-ID RTCPeerConnection
+// Object to hold each per-ID RTCPeerConnection and client state
 var pcs = {};
 
 // Object to hold peer video streams
@@ -35,6 +28,8 @@ var peer_streams = {};
 var media_constraints = { video: true, audio: false };
 
 // Handle self video
+// TODO: Add a Start Video button that handles all of this
+// Problems on iOS with requesting media on page load, it seems.
 var stream = new MediaStream();
 (async function() {
   stream = await navigator.mediaDevices.getUserMedia(media_constraints);
@@ -47,7 +42,7 @@ var stream = new MediaStream();
   Signaling Logic
 */
 
-// Basic connection diagnostic
+// Basic connection diagnostic and self_id assignment
 sc.on('message', function(data) {
   console.log('Message received:\n', data);
   // Set self_id
@@ -62,13 +57,11 @@ sc.on('connected peers', function(data) {
   console.log('Connected peers:\n', peers);
   // Client announces to everyone else that it has connected
   sc.emit('new connected peer', sc.id);
-  // TODO: Set up connections with existing peers
+  // Set up connections with existing peers
   for (var peer of peers) {
     // Establish peer; set politeness to false with existing peers
     // Existing peers will themselves be polite (true)
     establishPeer(peer,false);
-    // Establishing peers now; negotiating connection at some other point?
-    // negotiateConnection(peer);
   }
 });
 
@@ -82,11 +75,10 @@ sc.on('new connected peer', function(peer) {
   // Set up connection with new peer; be polite
   establishPeer(peer,true);
   // Add video stream tracks to new peer connection
+  // TODO: Move this into the establishPeer fuction?
   for (var track of stream.getTracks()) {
     pcs[peer].conn.addTrack(track);
   }
-  // Negotiate connection at some other point?
-  // negotiateConnection(peer);
 });
 
 // Rececive payload of newly disconnected peer
@@ -102,9 +94,9 @@ sc.on('new disconnected peer', function(peer) {
 
 // Signals are now only over private messages to avoid cross-talk
 sc.on('signal', async function({ to, from, candidate, description }) {
-  // `from` is key to figuring out who we're dealing with
+  // `from` is key to figuring out who we're negotiating a connection with
   var pc = pcs[from].conn;
-  var clientIs = pcs[from].clientIs; // Set up when pcs object is populated?
+  var clientIs = pcs[from].clientIs; // Set up when pcs object is populated
 
   try {
     if (description) {
@@ -114,6 +106,7 @@ sc.on('signal', async function({ to, from, candidate, description }) {
             !clientIs.makingOffer &&
             (pc.signalingState == "stable" || clientIs.settingRemoteAnswerPending);
 
+      // IMPORTANT! In previous class demos, I erronously was checking for an "answer" type here
       var offerCollision = description.type == "offer" && !readyForOffer;
 
       clientIs.ignoringOffer = !clientIs.polite && offerCollision;
@@ -263,10 +256,7 @@ function establishPeer(peer,isPolite) {
   appendVideo(peer);
 }
 
-// Utility funciton to add videos to the DOM
-// This should fire from within the ontrack event,
-// which itself should be registered in the negotiateConnection()
-// function
+// Utility funciton to add videos to the DOM with an empty MediaStream
 function appendVideo(id) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
@@ -305,13 +295,9 @@ function updateVideoSources(ps) {
 // Join button
 var joinButton = document.querySelector('#join-call');
 joinButton.addEventListener('click', function() {
-  // TODO: Set up connections with existing peers
   for (var pc in pcs) {
-    // Establish peer; set politeness to false with existing peers
-    // Existing peers will themselves be polite (true)
-    // establishPeer(peer,false);
     console.log('Negotiating connection with', pc);
-    // Load up our media stream tracks, too
+    // Load up our media stream tracks on any connections that lack them
     for (var track of stream.getTracks()) {
       // Some tracks may have already been added, so use a try/catch block here
       try {
@@ -320,8 +306,11 @@ joinButton.addEventListener('click', function() {
         console.error(err);
       }
     }
+    // Set the wheels in motion to negotiate the connection with each connected peer
     negotiateConnection(pcs[pc].conn, pcs[pc].clientIs, pc);
   }
+  // Remove the join button
   joinButton.remove();
+  // TODO: Add a "Leave Call" button, and buttons for controlling audio/video
 
 });
