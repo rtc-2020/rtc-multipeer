@@ -79,6 +79,10 @@ sc.on('new connected peer', function(peer) {
   console.log('New connected peers:\n', peers);
   // Set up connection with new peer; be polite
   establishPeer(peer,true);
+  // Add video stream tracks to new peer connection
+  for (var track of stream.getTracks()) {
+    pcs[peer].conn.addTrack(track, stream);
+  }
   // Negotiate connection at some other point?
   // negotiateConnection(peer);
 });
@@ -279,6 +283,20 @@ function removeVideo(peer) {
   var old_video = document.querySelector('#video-' + peer.split('#')[1]);
   if (old_video) {
     old_video.remove();
+  }
+}
+
+function updateVideoSources(ps) {
+  for (var p in ps) {
+    // console.log('Peer stream:', p);
+    // var video_id = p.split('#')[1];
+    // var video_el = document.querySelector('#video-' + video_id);
+    // console.log(video_id);
+    // video_el.srcObject = ps[p];
+    // video_el.autoplay = true;
+    // video_el.play();
+    peer_streams[p] = null;
+    // console.log(video_id,video_el,video_el.srcObject);
   }
 }
 
