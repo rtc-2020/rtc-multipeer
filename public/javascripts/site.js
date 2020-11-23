@@ -38,7 +38,9 @@ var media_constraints = { video: true, audio: false };
 var stream = new MediaStream();
 (async function() {
   stream = await navigator.mediaDevices.getUserMedia(media_constraints);
-  var selfVideo = document.querySelector('#self-video').srcObject = stream;
+  var selfStream = new MediaStream();
+  selfStream.addTrack(stream.getTracks()[0]);
+  var selfVideo = document.querySelector('#self-video').srcObject = selfStream;
 })();
 
 /*
@@ -81,7 +83,7 @@ sc.on('new connected peer', function(peer) {
   establishPeer(peer,true);
   // Add video stream tracks to new peer connection
   for (var track of stream.getTracks()) {
-    pcs[peer].conn.addTrack(track, stream);
+    pcs[peer].conn.addTrack(track);
   }
   // Negotiate connection at some other point?
   // negotiateConnection(peer);
@@ -311,7 +313,12 @@ joinButton.addEventListener('click', function() {
     console.log('Negotiating connection with', pc);
     // Load up our media stream tracks, too
     for (var track of stream.getTracks()) {
-      pcs[pc].conn.addTrack(track, stream);
+      // Some tracks may have already been added, so use a try/catch block here
+      try {
+        pcs[pc].conn.addTrack(track);
+      } catch(err) {
+        console.error(err);
+      }
     }
     negotiateConnection(pcs[pc].conn, pcs[pc].clientIs, pc);
   }
