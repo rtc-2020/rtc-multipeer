@@ -62,7 +62,8 @@ sc.on('connected peers', function(data) {
     // Establish peer; set politeness to false with existing peers
     // Existing peers will themselves be polite (true)
     establishPeer(peer,false);
-    negotiateConnection(peer);
+    // Establishing peers now; negotiating connection at some other point?
+    // negotiateConnection(peer);
   }
 });
 
@@ -75,7 +76,8 @@ sc.on('new connected peer', function(peer) {
   console.log('New connected peers:\n', peers);
   // Set up connection with new peer; be polite
   establishPeer(peer,true);
-  negotiateConnection(peer);
+  // Negotiate connection at some other point?
+  // negotiateConnection(peer);
 });
 
 // Rececive payload of newly disconnected peer
@@ -177,9 +179,8 @@ sc.on('signal', async function({ to, from, candidate, description }) {
 
 */
 
-async function negotiateConnection(peer_id) {
-  var pc = pcs[peer_id].conn;
-  var clientIs = pcs[peer_id].clientIs; // Set up when pcs object is populated?
+async function negotiateConnection(pc, clientIs, id) {
+  console.log('Need to work with negotiating id', id, '...');
   pc.onnegotiationneeded = async function() {
     try {
       console.log('Making an offer...');
@@ -197,7 +198,7 @@ async function negotiateConnection(peer_id) {
         await pc.setLocalDescription(offer);
       } finally {
         console.log('Sending an offer:\n', pc.localDescription);
-        sc.emit('signal', { to: peer_id, from: self_id, description: pc.localDescription });
+        sc.emit('signal', { to: id, from: self_id, description: pc.localDescription });
       }
     } catch(error) {
         console.error(error);
@@ -208,9 +209,21 @@ async function negotiateConnection(peer_id) {
 
   // Logic to send candidate
   pc.onicecandidate = function({candidate}) {
-    console.log(`Sending a candidate to ${peer_id}:\n`, candidate);
-    sc.emit('signal', { to: peer_id, from: self_id, candidate: candidate });
+    console.log(`Sending a candidate to ${id}:\n`, candidate);
+    sc.emit('signal', { to: id, from: self_id, candidate: candidate });
   };
+
+  // Respond to peer track events
+  pc.ontrack = function(track) {
+    console.log('Heard an ontrack event:\n', track);
+    appendVideo(track,id);
+  }
+
+  // Load up our media stream tracks, too
+  for (var track of stream.getTracks()) {
+    pc.addTrack(track);
+  }
+
 
 // End negotiateConnection() function
 }
@@ -222,7 +235,10 @@ function removePeer(peers,id) {
   if (index === -1) {
     return; // no peer with that ID
   }
+  // Remove from peers array
   peers.splice(index,1);
+  // Remove from pcs connection object
+  delete pcs[id];
   return peers;
 }
 
@@ -236,29 +252,42 @@ function establishPeer(peer,isPolite) {
     settingRemoteAnswerPending: false
   };
   pcs[peer].conn = new RTCPeerConnection(rtc_config);
-  // Load up our media stream tracks, too!
-  for (var track of stream.getTracks()) {
-    pcs[peer].conn.addTrack(track);
-  }
-  appendVideo(peer);
 }
 
 // Utility funciton to add videos to the DOM
-function appendVideo(peer) {
+// This should fire from within the ontrack event,
+// which itself should be registered in the negotiateConnection()
+// function
+function appendVideo(track,id) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
-  var peer_stream = new MediaStream();
-  video.id = "video-" + peer.split('#')[1];
-  video.srcObject = peer_stream;
+  console.log('Attempting to add track', track.track);
+  var peer_stream = new MediaStream([track.track]);
   video.autoplay = true;
-  pcs[peer].conn.ontrack = function(track) {
-    console.log('Heard an ontrack event');
-    peer_stream.addTrack(track.track);
-  }
+  video.id = "video-" + id.split('#')[1];
+  video.srcObject = peer_stream;
   videos.appendChild(video);
 }
 
 // Utlity function to remove videos from the DOM
 function removeVideo(peer) {
-  document.querySelector('#video-' + peer.split('#')[1]).remove();
+  var old_video = document.querySelector('#video-' + peer.split('#')[1]);
+  if (old_video) {
+    old_video.remove();
+  }
 }
+
+// Join button
+var joinButton = document.querySelector('#join-call');
+joinButton.addEventListener('click', function() {
+  // TODO: Set up connections with existing peers
+  for (var pc in pcs) {
+    // Establish peer; set politeness to false with existing peers
+    // Existing peers will themselves be polite (true)
+    // establishPeer(peer,false);
+    console.log('Negotiating connection with', pc);
+    negotiateConnection(pcs[pc].conn, pcs[pc].clientIs, pc);
+  }
+  joinButton.remove();
+
+});
