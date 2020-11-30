@@ -259,7 +259,10 @@ function establishPeer(peer,isPolite) {
 // Utility funciton to add videos to the DOM with an empty MediaStream
 function appendVideo(id) {
   var videos = document.querySelector('#videos');
+  var figure = document.createElement('figure');
+  var figcaption = document.createElement('figcaption');
   var video = document.createElement('video');
+  figcaption.className = 'hidden';
   // Create an empty stream on the peer_streams object;
   // Remote track will be added later
   peer_streams[id] = new MediaStream();
@@ -267,7 +270,35 @@ function appendVideo(id) {
   video.id = "video-" + id.split('#')[1];
   // Set the video source to the empty peer stream
   video.srcObject = peer_streams[id];
-  videos.appendChild(video);
+  video.addEventListener('click', async function(event) {
+    var stats_output = document.createElement('ul');
+    event.target.parentNode.querySelector('figcaption').className = '';
+    setInterval(async function() {
+      // Clear the old stats from the list
+      stats_output.innerHTML = '';
+      var stats = await pcs[id].conn.getStats();
+      stats.forEach(function(report) {
+        if ((report.type).indexOf('rtp') !== -1) {
+          var stats_item = document.createElement('li');
+          stats_item.className = report.type;
+          if ((report.type).indexOf('inbound') !== -1) {
+            // Handle data on inbound reports
+            stats_item.innerHTML = `<i>${report.type}</i>: <b>PacketsRx</b>: ${report.packetsReceived} <b>Packets Lost</b>: ${report.packetsLost}`;
+          } else {
+            // Handle data on outbound reports
+            stats_item.innerHTML = `<i>${report.type}</i>: <b>PacketsTx</b>: ${report.packetsSent}`;
+          }
+          stats_output.appendChild(stats_item);
+        }
+      });
+      // Clear the old stats
+      event.target.parentNode.querySelector('figcaption').innerHTML = '';
+      event.target.parentNode.querySelector('figcaption').appendChild(stats_output);
+    }, 1000);
+  });
+  figure.appendChild(video);
+  figure.appendChild(figcaption);
+  videos.appendChild(figure);
 }
 
 // Utlity function to remove videos from the DOM
