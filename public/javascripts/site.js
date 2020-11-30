@@ -300,3 +300,13 @@ joinButton.addEventListener('click', function() {
   // TODO: Add a "Leave Call" button, and buttons for controlling audio/video
 
 });
+
+// Show stats
+async function showStats(peer_id) {
+  var stats = await pcs[peer_id].conn.getStats();
+  stats.forEach(function(report) {
+    if ((report.type).indexOf('rtp') !== -1) {
+      console.log(report);
+    }
+  });
+}
