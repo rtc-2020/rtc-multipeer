@@ -34,14 +34,16 @@ namespaces.on('connect', function(socket) {
   // `namespace` is purely for diagnostic purposes;
   // listen and emit ONLY on the `socket` object
   const namespace = socket.nsp;
+  // `namepsace.sockets` is a Map object in Socket.io v3
+  var peers = [];
+  for (var peer of namespace.sockets.keys()) {
+    peers.push(peer);
+  }
+  console.log(`Connected client: ${socket.id}`);
+  console.log(`Connected peers: ${peers}`);
 
-  // TODO: Inform the connecting client of its ID
-  socket.emit('message', `${socket.id} successfully connected on namespace ${namespace.name}`);
-  console.log(`Client ${socket.id} connected`);
-  // TODO: Inform the connecting client of all connected clients on the namespace
-  namespace.clients(function(error,clients) {
-    socket.emit('connected peers', clients);
-  });
+  // Emit the array of connected peers on initial connect
+  socket.emit('connected peers', peers);
 
   socket.on('new connected peer', function(data) {
     // Broadcast the newly connected peer's ID to previously connected clients
@@ -54,7 +56,6 @@ namespaces.on('connect', function(socket) {
   });
 
   // Handle signaling events and their destructured object data
-  // TODO: This logic should send signaling meesage to a specific peer
   socket.on('signal', function({ to, from, description, candidate}) {
     console.log(`Received a signal from ${socket.id}`);
     console.log({to, from, description, candidate});
