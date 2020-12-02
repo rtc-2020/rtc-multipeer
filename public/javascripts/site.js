@@ -13,6 +13,12 @@ sc.on('connect', handleSignalingConnection);
 sc.on('connected peers', handleConnectedPeers);
 sc.on('new connected peer', handleNewConnectedPeer);
 
+/*
+
+  SIGNALING CHANNEL CALLBACK FUNCTIONS
+
+*/
+
 // Set connection diagnostic and self_id assignment
 function handleSignalingConnection() {
   // Set self.id
@@ -30,6 +36,12 @@ function handleConnectedPeers(peers) {
 function handleNewConnectedPeer(peer) {
   if (self.DEBUG) console.log('Newly connected peer:', peer);
 }
+
+/*
+
+  DOM ELEMENTS AND EVENTS
+
+*/
 
 // Join button
 var joinButton = document.querySelector('#join-call');
