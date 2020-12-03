@@ -9,9 +9,11 @@ var self = {
   id: ''
 };
 
-sc.on('connect', handleSignalingConnection);
+sc.on('connect', handleConnect);
 sc.on('connected peers', handleConnectedPeers);
 sc.on('new connected peer', handleNewConnectedPeer);
+sc.on('new disconnected peer', handleNewDisconnectedPeer)
+sc.on('signal', handleSignal);
 
 /*
 
@@ -20,7 +22,7 @@ sc.on('new connected peer', handleNewConnectedPeer);
 */
 
 // Set connection diagnostic and self_id assignment
-function handleSignalingConnection() {
+function handleConnect() {
   // Set self.id
   self.id = sc.id;
   if (self.DEBUG) console.log('My ID on the signaling channel is', self.id);
@@ -32,9 +34,19 @@ function handleConnectedPeers(peers) {
   sc.emit('new connected peer', self.id);
 }
 
-// Handle newly connected peers
+// Handle new connected peers
 function handleNewConnectedPeer(peer) {
-  if (self.DEBUG) console.log('Newly connected peer:', peer);
+  if (self.DEBUG) console.log('New connected peer:', peer);
+}
+
+// Handle new disconnected peer
+function handleNewDisconnectedPeer(peer) {
+  if (self.DEBUG) console.log('New disconnected peer:', peer);
+}
+
+// Handle RTC signaling over the signaling channel
+async function handleSignal({ to, from, candidate, description }) {
+
 }
 
 /*
