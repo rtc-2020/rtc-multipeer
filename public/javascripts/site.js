@@ -85,7 +85,7 @@ function establishPeers(who,isPolite) {
     // Respond to negotiationneeded events
     peers[peer].conn.onnegotiationneeded = negotiateConnection(peer);
     // Respond to peer track events
-    peers[peer].conn.ontrack = handleOnTrack(peer);
+    peers[peer].conn.ontrack = handleOnTrack(peers[peer]);
     appendVideo(peer);
   }
 }
@@ -103,7 +103,7 @@ function handleOnTrack(peer) {
     // Append track to the correct peer stream object
     track.onunmute = function() {
       if (self.DEBUG) console.log('Heard an unmute event');
-      peers[peer].stream.addTrack(track);
+      peer.stream.addTrack(track);
     };
   }
 }
