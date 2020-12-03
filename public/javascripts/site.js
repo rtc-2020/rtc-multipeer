@@ -6,8 +6,18 @@ var sc = io('/' + NAMESPACE, { autoConnect: false });
 // Object to hold details about self
 var self = {
   DEBUG: true,
-  id: ''
+  id: '',
+  stream: null
 };
+
+// Handle self video
+(async function() {
+  var media_constraints = { video: true, audio: false };
+  var selfSource = new MediaStream();
+  self.stream = await navigator.mediaDevices.getUserMedia(media_constraints);
+  selfSource.addTrack(self.stream.getTracks()[0]);
+  document.querySelector('#self-video').srcObject = selfSource;
+})();
 
 // Object to hold details about peers
 var peers = {};
