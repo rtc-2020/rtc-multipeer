@@ -71,24 +71,24 @@ function establishPeers(who,isPolite) {
   peers_list = peers_list.flat(); // flatten the array, in case array of peers pushed
   // Loop through peers_list (even if single peer)
   for (var peer of peers_list) {
-  pcs[peer] = {};
-  pcs[peer].clientIs = {
-    polite: isPolite, // Be impolite with existing peers, who will themselves be polite
-    makingOffer: false,
-    ignoringOffer: false,
-    settingRemoteAnswerPending: false
-  };
-  pcs[peer].conn = new RTCPeerConnection(rtc_config);
-  // Respond to peer track events
-  pcs[peer].conn.ontrack = function({track}) {
-    console.log('Heard an ontrack event:\n', track);
-    // Append track to the correct peer stream object
-    track.onunmute = function() {
-      console.log('Heard an unmute event');
-      peer_streams[peer].addTrack(track);
+    pcs[peer] = {};
+    pcs[peer].clientIs = {
+      polite: isPolite, // Be impolite with existing peers, who will themselves be polite
+      makingOffer: false,
+      ignoringOffer: false,
+      settingRemoteAnswerPending: false
     };
-  };
-  appendVideo(peer);
+    pcs[peer].conn = new RTCPeerConnection(rtc_config);
+    // Respond to peer track events
+    pcs[peer].conn.ontrack = function({track}) {
+      console.log('Heard an ontrack event:\n', track);
+      // Append track to the correct peer stream object
+      track.onunmute = function() {
+        console.log('Heard an unmute event');
+        peer_streams[peer].addTrack(track);
+      };
+    };
+    appendVideo(peer);
   }
 }
 
