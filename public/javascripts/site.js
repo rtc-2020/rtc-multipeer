@@ -65,7 +65,12 @@ async function handleSignal({ to, from, candidate, description }) {
 */
 
 // Utility function to populate a peer to the peers object
-function establishPeer(peer,isPolite) {
+function establishPeers(who,isPolite) {
+  var peers_list = [];
+  peers_list.push(who);
+  peers_list = peers_list.flat(); // flatten the array, in case array of peers pushed
+  // Loop through peers_list (even if single peer)
+  for (var peer of peers_list) {
   pcs[peer] = {};
   pcs[peer].clientIs = {
     polite: isPolite, // Be impolite with existing peers, who will themselves be polite
@@ -84,6 +89,7 @@ function establishPeer(peer,isPolite) {
     };
   };
   appendVideo(peer);
+  }
 }
 
 
