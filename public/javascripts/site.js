@@ -159,11 +159,11 @@ function establishPeers(who,isPolite) {
     peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to negotiationneeded events
-    peers[peer].conn.onnegotiationneeded = negotiateConnection(peers[peer],peer);
+    peers[peer].conn.onnegotiationneeded = negotiateConnection(peer);
     // Respond to ICE candidate events
     peers[peer].conn.onicecandidate = handleICECandidate(peer);
     // Respond to peer track events
-    peers[peer].conn.ontrack = handleOnTrack(peers[peer]);
+    peers[peer].conn.ontrack = handleOnTrack(peer);
     appendVideo(peer);
   }
 }
@@ -175,30 +175,32 @@ function establishPeers(who,isPolite) {
 
 */
 
-function negotiateConnection(peer,peer_id) {
+function negotiateConnection(peer_id) {
   return async function() {
+    var pc = peers[peer_id].conn;
+    var clientIs = peers[peer_id].clientIs; // Set up when pcs object is populated
     try {
       if (self.DEBUG) console.log('Making an offer...');
-      peer.clientIs.makingOffer = true;
+      clientIs.makingOffer = true;
       try {
         // Very latest browsers are totally cool with an
         // argument-less call to setLocalDescription:
-        await peer.conn.setLocalDescription();
+        await pc.setLocalDescription();
       } catch(error) {
         // Older (and not even all that old) browsers
         // are NOT cool. So because we're making an
         // offer, we need to prepare an offer:
         console.log('Falling back to older setLocalDescription method when making an offer...');
-        var offer = await peer.conn.createOffer();
-        await peer.conn.setLocalDescription(offer);
+        var offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
       } finally {
-        console.log('Sending an offer:\n', peer.conn.localDescription);
-        sc.emit('signal', { to: peer_id, from: self.id, description: peer.conn.localDescription });
+        console.log('Sending an offer:\n', pc.localDescription);
+        sc.emit('signal', { to: peer_id, from: self.id, description: pc.localDescription });
       }
     } catch(error) {
       console.error(error);
     } finally {
-      peer.clientIs.makingOffer = false;
+      clientIs.makingOffer = false;
     }
   }
 }
@@ -210,7 +212,8 @@ function handleICECandidate(peer_id) {
   }
 }
 
-function handleOnTrack(peer) {
+function handleOnTrack(peer_id) {
+  peer = peers[peer_id];
   return function({track}) {
     if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
     // Append track to the correct peer stream object
