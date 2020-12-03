@@ -96,10 +96,10 @@ function establishPeers(who,isPolite) {
 */
 
 function handlePeerTrack({track}) {
-  console.log('Heard an ontrack event:\n', track);
+  if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
   // Append track to the correct peer stream object
   track.onunmute = function() {
-    console.log('Heard an unmute event');
+    if (self.DEBUG) console.log('Heard an unmute event');
     peers[peer].stream.addTrack(track);
   };
 }
