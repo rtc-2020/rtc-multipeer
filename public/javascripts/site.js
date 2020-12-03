@@ -71,16 +71,16 @@ function establishPeers(who,isPolite) {
   peers_list = peers_list.flat(); // flatten the array, in case array of peers pushed
   // Loop through peers_list (even if single peer)
   for (var peer of peers_list) {
-    pcs[peer] = {};
-    pcs[peer].clientIs = {
+    peers[peer] = {};
+    peers[peer].clientIs = {
       polite: isPolite, // Be impolite with existing peers, who will themselves be polite
       makingOffer: false,
       ignoringOffer: false,
       settingRemoteAnswerPending: false
     };
-    pcs[peer].conn = new RTCPeerConnection(rtc_config);
+    peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to peer track events
-    pcs[peer].conn.ontrack = function({track}) {
+    peers[peer].conn.ontrack = function({track}) {
       console.log('Heard an ontrack event:\n', track);
       // Append track to the correct peer stream object
       track.onunmute = function() {
