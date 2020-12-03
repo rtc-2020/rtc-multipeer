@@ -9,6 +9,9 @@ var self = {
   id: ''
 };
 
+// Object to hold details about peers
+var peers = {};
+
 sc.on('connect', handleConnect);
 sc.on('connected peers', handleConnectedPeers);
 sc.on('new connected peer', handleNewConnectedPeer);
