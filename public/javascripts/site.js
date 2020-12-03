@@ -42,19 +42,22 @@ function handleConnect() {
 }
 
 // Handle any already connected peers
-function handleConnectedPeers(peers) {
-  if (self.DEBUG) console.log('Connected peers:', peers);
+function handleConnectedPeers(peer_data) {
+  if (self.DEBUG) console.log('Connected peers:', peer_data);
+  peer_data = removePeer(self.id, peer_data);
+  establishPeers(peer_data, false);
   sc.emit('new connected peer', self.id);
 }
 
 // Handle new connected peers
-function handleNewConnectedPeer(peer) {
-  if (self.DEBUG) console.log('New connected peer:', peer);
+function handleNewConnectedPeer(peer_data) {
+  if (self.DEBUG) console.log('New connected peer:', peer_data);
+  establishPeers(peer_data, true);
 }
 
 // Handle new disconnected peer
-function handleNewDisconnectedPeer(peer) {
-  if (self.DEBUG) console.log('New disconnected peer:', peer);
+function handleNewDisconnectedPeer(peer_data) {
+  if (self.DEBUG) console.log('New disconnected peer:', peer_data);
 }
 
 // Handle RTC signaling over the signaling channel
