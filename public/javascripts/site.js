@@ -82,8 +82,10 @@ function establishPeers(who,isPolite) {
     };
     peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
+    // Respond to negotiationneeded events
+    peers[peer].conn.onnegotiationneeded = negotiateConnection(peer);
     // Respond to peer track events
-    peers[peer].conn.ontrack = handlePeerTrack;
+    peers[peer].conn.ontrack = handleOnTrack(peer);
     appendVideo(peer);
   }
 }
@@ -95,13 +97,15 @@ function establishPeers(who,isPolite) {
 
 */
 
-function handlePeerTrack({track}) {
-  if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
-  // Append track to the correct peer stream object
-  track.onunmute = function() {
-    if (self.DEBUG) console.log('Heard an unmute event');
-    peers[peer].stream.addTrack(track);
-  };
+function handleOnTrack(peer) {
+  return function({track}) {
+    if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
+    // Append track to the correct peer stream object
+    track.onunmute = function() {
+      if (self.DEBUG) console.log('Heard an unmute event');
+      peers[peer].stream.addTrack(track);
+    };
+  }
 }
 
 
