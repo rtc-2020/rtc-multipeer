@@ -117,7 +117,7 @@ async function handleSignal({ to, from, candidate, description }) {
             await pc.setLocalDescription(offer);
           } finally {
             if (self.DEBUG) console.log('Sending a response:\n', pc.localDescription);
-            sc.emit('signal', { to: from, from: self_id, description: pc.localDescription });
+            sc.emit('signal', { to: from, from: self.id, description: pc.localDescription });
           }
       }
 
