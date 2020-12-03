@@ -54,6 +54,41 @@ async function handleSignal({ to, from, candidate, description }) {
 
 /*
 
+  RTC CALLBACK FUNCTIONS
+
+*/
+
+/*
+
+  RTC UTILITY FUNCTIONS
+
+*/
+
+// Utility function to populate a peer to the peers object
+function establishPeer(peer,isPolite) {
+  pcs[peer] = {};
+  pcs[peer].clientIs = {
+    polite: isPolite, // Be impolite with existing peers, who will themselves be polite
+    makingOffer: false,
+    ignoringOffer: false,
+    settingRemoteAnswerPending: false
+  };
+  pcs[peer].conn = new RTCPeerConnection(rtc_config);
+  // Respond to peer track events
+  pcs[peer].conn.ontrack = function({track}) {
+    console.log('Heard an ontrack event:\n', track);
+    // Append track to the correct peer stream object
+    track.onunmute = function() {
+      console.log('Heard an unmute event');
+      peer_streams[peer].addTrack(track);
+    };
+  };
+  appendVideo(peer);
+}
+
+
+/*
+
   DOM ELEMENTS AND EVENTS
 
 */
@@ -67,4 +102,18 @@ function joinCall(event) {
   sc.open();
   // Remove the join button
   event.target.remove();
+}
+
+// Utility funciton to add videos to the DOM with an empty MediaStream
+function appendVideo(id) {
+  var videos = document.querySelector('#videos');
+  var video = document.createElement('video');
+  // Create an empty stream on the peer_streams object;
+  // Remote track will be added later
+  peer_streams[id] = new MediaStream();
+  video.autoplay = true;
+  video.id = "video-" + id.split('#')[1];
+  // Set the video source to the empty peer stream
+  video.srcObject = peer_streams[id];
+  videos.appendChild(video);
 }
