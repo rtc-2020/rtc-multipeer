@@ -275,6 +275,22 @@ function addSelfVideoToPeer(peer_id) {
   }
 }
 
+// Utility function to remove peers: self or disconnects
+function removePeer(peer_id, peer_list) {
+  // If dealing with optional peer_list, remove ID
+  if (peer_list) {
+    var index = peer_list.indexOf(peer_id);
+    if (index === -1) {
+      return; // no peer with that ID
+    }
+    // Remove from list of peers
+    peer_list.splice(index,1);
+    return peer_list;
+  }
+  // Remove from peers object
+  delete peers[peer_id];
+}
+
 // Utlity function to remove videos from the DOM
 function removePeerVideoElement(peer_id) {
   var old_video = document.querySelector('#video-' + peer_id);
