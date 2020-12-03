@@ -83,7 +83,9 @@ function establishPeers(who,isPolite) {
     peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to negotiationneeded events
-    peers[peer].conn.onnegotiationneeded = negotiateConnection(peer);
+    peers[peer].conn.onnegotiationneeded = negotiateConnection(peers[peer]);
+    // Respond to ICE candidate events
+    peers[peer].conn.onicecandidate = handleICECandidate(peer);
     // Respond to peer track events
     peers[peer].conn.ontrack = handleOnTrack(peers[peer]);
     appendVideo(peer);
@@ -96,6 +98,41 @@ function establishPeers(who,isPolite) {
   RTC CALLBACK FUNCTIONS
 
 */
+
+function negotiateConnection(peer) {
+  return async function() {
+    try {
+      if (self.DEBUG) console.log('Making an offer...');
+      peer.clientIs.makingOffer = true;
+      try {
+        // Very latest browsers are totally cool with an
+        // argument-less call to setLocalDescription:
+        await peer.conn.setLocalDescription();
+      } catch(error) {
+        // Older (and not even all that old) browsers
+        // are NOT cool. So because we're making an
+        // offer, we need to prepare an offer:
+        console.log('Falling back to older setLocalDescription method when making an offer...');
+        var offer = await peer.conn.createOffer();
+        await peer.conn.setLocalDescription(offer);
+      } finally {
+        console.log('Sending an offer:\n', peer.conn.localDescription);
+        sc.emit('signal', { to: id, from: self_id, description: peer.conn.localDescription });
+      }
+    } catch(error) {
+      console.error(error);
+    } finally {
+      peer.clientIs.makingOffer = false;
+    }
+  }
+}
+
+function handleICECandidate(peer_id) {
+  return function({candidate}) {
+    if (self.DEBUG) console.log(`Sending a candidate to ${peer_id}:\n`, candidate);
+    sc.emit('signal', { to: peer_id, from: self.id, candidate: candidate });
+  }
+}
 
 function handleOnTrack(peer) {
   return function({track}) {
