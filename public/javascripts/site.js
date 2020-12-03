@@ -83,7 +83,7 @@ function establishPeers(who,isPolite) {
     peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to negotiationneeded events
-    peers[peer].conn.onnegotiationneeded = negotiateConnection(peers[peer]);
+    peers[peer].conn.onnegotiationneeded = negotiateConnection(peers[peer],peer);
     // Respond to ICE candidate events
     peers[peer].conn.onicecandidate = handleICECandidate(peer);
     // Respond to peer track events
@@ -99,7 +99,7 @@ function establishPeers(who,isPolite) {
 
 */
 
-function negotiateConnection(peer) {
+function negotiateConnection(peer,peer_id) {
   return async function() {
     try {
       if (self.DEBUG) console.log('Making an offer...');
@@ -117,7 +117,7 @@ function negotiateConnection(peer) {
         await peer.conn.setLocalDescription(offer);
       } finally {
         console.log('Sending an offer:\n', peer.conn.localDescription);
-        sc.emit('signal', { to: id, from: self_id, description: peer.conn.localDescription });
+        sc.emit('signal', { to: peer_id, from: self.id, description: peer.conn.localDescription });
       }
     } catch(error) {
       console.error(error);
