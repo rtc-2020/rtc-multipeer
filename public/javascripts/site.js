@@ -123,3 +123,11 @@ function appendVideo(peer) {
   video.srcObject = peers[peer].stream;
   videos.appendChild(video);
 }
+
+// Utlity function to remove videos from the DOM
+function removeVideo(peer) {
+  var old_video = document.querySelector('#video-' + peer.split('#')[1]);
+  if (old_video) {
+    old_video.remove();
+  }
+}
