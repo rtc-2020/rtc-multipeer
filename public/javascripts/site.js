@@ -54,12 +54,6 @@ async function handleSignal({ to, from, candidate, description }) {
 
 /*
 
-  RTC CALLBACK FUNCTIONS
-
-*/
-
-/*
-
   RTC UTILITY FUNCTIONS
 
 */
@@ -89,16 +83,25 @@ function establishPeers(who,isPolite) {
     peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to peer track events
-    peers[peer].conn.ontrack = function({track}) {
-      console.log('Heard an ontrack event:\n', track);
-      // Append track to the correct peer stream object
-      track.onunmute = function() {
-        console.log('Heard an unmute event');
-        peers[peer].stream.addTrack(track);
-      };
-    };
+    peers[peer].conn.ontrack = handlePeerTrack;
     appendVideo(peer);
   }
+}
+
+
+/*
+
+  RTC CALLBACK FUNCTIONS
+
+*/
+
+function handlePeerTrack({track}) {
+  console.log('Heard an ontrack event:\n', track);
+  // Append track to the correct peer stream object
+  track.onunmute = function() {
+    console.log('Heard an unmute event');
+    peers[peer].stream.addTrack(track);
+  };
 }
 
 
