@@ -118,7 +118,7 @@ function appendVideo(peer) {
   // Create an empty stream on the peer_streams object;
   // Remote track will be added later
   video.autoplay = true;
-  video.id = "video-" + id.split('#')[1];
+  video.id = "video-" + peer;
   // Set the video source to the empty peer stream
   video.srcObject = peers[peer].stream;
   videos.appendChild(video);
@@ -126,7 +126,7 @@ function appendVideo(peer) {
 
 // Utlity function to remove videos from the DOM
 function removeVideo(peer) {
-  var old_video = document.querySelector('#video-' + peer.split('#')[1]);
+  var old_video = document.querySelector('#video-' + peer);
   if (old_video) {
     old_video.remove();
   }
