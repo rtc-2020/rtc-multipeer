@@ -176,7 +176,8 @@ function establishPeers(who,isPolite) {
     peers[peer].conn.onicecandidate = handleICECandidate(peer);
     // Respond to peer track events
     peers[peer].conn.ontrack = handleOnTrack(peer);
-    appendVideo(peer);
+    appendPeerVideoElement(peer);
+    addSelfVideoToPeer(peer);
   }
 }
 
@@ -254,22 +255,29 @@ function joinCall(event) {
   event.target.remove();
 }
 
-// Utility funciton to add videos to the DOM with an empty MediaStream
-function appendVideo(peer) {
+// Utility funciton to add video elements to the DOM with an empty MediaStream
+function appendPeerVideoElement(peer_id) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
   // Create an empty stream on the peer_streams object;
   // Remote track will be added later
   video.autoplay = true;
-  video.id = "video-" + peer;
+  video.id = "video-" + peer_id;
   // Set the video source to the empty peer stream
-  video.srcObject = peers[peer].stream;
+  video.srcObject = peers[peer_id].stream;
   videos.appendChild(video);
 }
 
+// Utility function to add tracks to existing peer streams
+function addSelfVideoToPeer(peer_id) {
+  for (var track of self.stream.getTracks()) {
+    peers[peer_id].conn.addTrack(track);
+  }
+}
+
 // Utlity function to remove videos from the DOM
-function removeVideo(peer) {
-  var old_video = document.querySelector('#video-' + peer);
+function removePeerVideoElement(peer_id) {
+  var old_video = document.querySelector('#video-' + peer_id);
   if (old_video) {
     old_video.remove();
   }
