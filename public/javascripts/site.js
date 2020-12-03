@@ -66,6 +66,14 @@ async function handleSignal({ to, from, candidate, description }) {
 
 // Utility function to populate a peer to the peers object
 function establishPeers(who,isPolite) {
+  // Using Google's STUN servers
+  var rtc_config = {
+    iceServers: [
+      {
+        urls: ['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']
+      }
+    ]
+  };
   var peers_list = [];
   peers_list.push(who);
   peers_list = peers_list.flat(); // flatten the array, in case array of peers pushed
