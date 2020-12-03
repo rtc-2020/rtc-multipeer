@@ -78,6 +78,7 @@ function establishPeers(who,isPolite) {
       ignoringOffer: false,
       settingRemoteAnswerPending: false
     };
+    peers[peer].stream = new MediaStream();
     peers[peer].conn = new RTCPeerConnection(rtc_config);
     // Respond to peer track events
     peers[peer].conn.ontrack = function({track}) {
@@ -85,7 +86,7 @@ function establishPeers(who,isPolite) {
       // Append track to the correct peer stream object
       track.onunmute = function() {
         console.log('Heard an unmute event');
-        peer_streams[peer].addTrack(track);
+        peers[peer].stream.addTrack(track);
       };
     };
     appendVideo(peer);
@@ -111,15 +112,14 @@ function joinCall(event) {
 }
 
 // Utility funciton to add videos to the DOM with an empty MediaStream
-function appendVideo(id) {
+function appendVideo(peer) {
   var videos = document.querySelector('#videos');
   var video = document.createElement('video');
   // Create an empty stream on the peer_streams object;
   // Remote track will be added later
-  peer_streams[id] = new MediaStream();
   video.autoplay = true;
   video.id = "video-" + id.split('#')[1];
   // Set the video source to the empty peer stream
-  video.srcObject = peer_streams[id];
+  video.srcObject = peers[peer].stream;
   videos.appendChild(video);
 }
