@@ -6,9 +6,11 @@ block content
     p Welcome to #{title}
 
   main#app
-    video#self-video(autoplay="true")
+    figure#self-video
+      video(autoplay="true")
+      figcaption
     button#join-call Join Call
-    figure#videos
+    article#videos
 
   script.
     window.NAMESPACE = "#{namespace}";

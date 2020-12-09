@@ -16,7 +16,7 @@ var self = {
   var selfSource = new MediaStream();
   self.stream = await navigator.mediaDevices.getUserMedia(media_constraints);
   selfSource.addTrack(self.stream.getTracks()[0]);
-  document.querySelector('#self-video').srcObject = selfSource;
+  document.querySelector('#self-video video').srcObject = selfSource;
 })();
 
 // Object to hold details about peers
@@ -38,7 +38,11 @@ sc.on('signal', handleSignal);
 function handleConnect() {
   // Set self.id
   self.id = sc.id;
-  if (self.DEBUG) console.log('My ID on the signaling channel is', self.id);
+  if (self.DEBUG) {
+    console.log('My ID on the signaling channel is', self.id);
+    document.querySelector('#self-video figcaption').innerText = self.id;
+    document.querySelector('#self-video figcaption').className = 'debug';
+  }
 }
 
 // Handle any already connected peers
@@ -266,14 +270,20 @@ function joinCall(event) {
 // Utility funciton to add video elements to the DOM with an empty MediaStream
 function appendPeerVideoElement(peer_id) {
   var videos = document.querySelector('#videos');
+  var figure = document.createElement('figure');
+  var figcaption = document.createElement('figcaption');
   var video = document.createElement('video');
   // Create an empty stream on the peer_streams object;
   // Remote track will be added later
+  figure.id = "video-" + peer_id;
+  figcaption.innerText = peer_id;
+  if (self.DEBUG) figcaption.className = 'debug';
   video.autoplay = true;
-  video.id = "video-" + peer_id;
   // Set the video source to the empty peer stream
   video.srcObject = peers[peer_id].stream;
-  videos.appendChild(video);
+  figure.appendChild(figcaption);
+  figure.appendChild(video);
+  videos.appendChild(figure);
 }
 
 // Utility function to add tracks to existing peer streams
