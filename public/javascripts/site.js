@@ -236,7 +236,6 @@ function handleICECandidate(peer_id) {
 }
 
 function handleOnTrack(peer_id) {
-  peer = peers[peer_id];
   return function({track}) {
     if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
     if (self.DEBUG) console.log('Adding a video for', peer_id);
@@ -244,7 +243,7 @@ function handleOnTrack(peer_id) {
     track.onunmute = function() {
       if (self.DEBUG) console.log('Heard an unmute event');
       if (self.DEBUG) console.log('Adding a track from', peer_id);
-      peer.stream.addTrack(track);
+      peers[peer_id].stream.addTrack(track);
     };
   }
 }
