@@ -179,6 +179,9 @@ function establishPeers(who,isPolite) {
     peers[peer].conn.onicecandidate = handleICECandidate(peer);
     // Respond to peer track events
     peers[peer].conn.ontrack = handleOnTrack(peer);
+    peers[peer].conn.onconnectionstatechange = function(e) {
+      if (self.DEBUG) console.log("Connecting state with", peer, peers[peer].conn.connectionState);
+    }
     appendPeerVideoElement(peer);
     addSelfVideoToPeer(peer);
   }
@@ -232,9 +235,11 @@ function handleOnTrack(peer_id) {
   peer = peers[peer_id];
   return function({track}) {
     if (self.DEBUG) console.log('Heard an ontrack event:\n', track);
+    if (self.DEBUG) console.log('Adding a video for', peer_id);
     // Append track to the correct peer stream object
     track.onunmute = function() {
       if (self.DEBUG) console.log('Heard an unmute event');
+      if (self.DEBUG) console.log('Adding a track from', peer_id);
       peer.stream.addTrack(track);
     };
   }
@@ -274,6 +279,7 @@ function appendPeerVideoElement(peer_id) {
 // Utility function to add tracks to existing peer streams
 function addSelfVideoToPeer(peer_id) {
   for (var track of self.stream.getTracks()) {
+    if (self.DEBUG) console.log("Adding my track to", peer_id);
     peers[peer_id].conn.addTrack(track);
   }
 }
