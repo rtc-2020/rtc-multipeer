@@ -277,7 +277,8 @@ function appendPeerVideoElement(peer_id) {
   figure.id = "video-" + peer_id;
   figcaption.innerText = peer_id;
   if (self.DEBUG) figcaption.className = 'debug';
-  video.autoplay = true;
+  video.setAttribute('autoplay','true');
+  video.setAttribute('playsinline','true');
   // Set the video source to the empty peer stream
   video.srcObject = peers[peer_id].stream;
   figure.appendChild(figcaption);
